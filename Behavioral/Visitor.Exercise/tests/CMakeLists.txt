@@ -21,8 +21,8 @@ if (NOT Catch2_FOUND)
   list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 endif()
 
-include(CTest)
 include(Catch)
+
 enable_testing()
 
 file(GLOB TEST_SOURCES *_tests.cpp *_test.cpp)

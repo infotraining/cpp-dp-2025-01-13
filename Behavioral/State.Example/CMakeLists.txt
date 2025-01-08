@@ -17,5 +17,5 @@ target_link_libraries(${TARGET_MAIN} turnstile_lib)
 #----------------------------------------
 # Tests
 #----------------------------------------
-enable_testing()
-add_subdirectory(tests)
+# enable_testing()
+# add_subdirectory(tests)

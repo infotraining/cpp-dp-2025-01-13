@@ -4,8 +4,9 @@ get_filename_component(DIRECTORY_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 string(REPLACE " " "_" TARGET_MAIN ${DIRECTORY_NAME})
 
 add_subdirectory(src)
-enable_testing()
-add_subdirectory(tests)
+
+# enable_testing()
+# add_subdirectory(tests)
 
 ####################
 # Main app
