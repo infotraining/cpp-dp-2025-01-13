@@ -143,36 +143,6 @@ void static_polymorphism()
     logger2.log("hello, world!");
 }
 
-class Container : std::vector<int>
-{
-    using BaseImpl = std::vector<int>;
-public:
-    using BaseImpl::BaseImpl;
-      
-
-    size_t size() const
-    {
-        return BaseImpl::size();
-    }
-
-    int& operator[](size_t index)
-    {
-        return BaseImpl::operator[](index);
-    }    
-
-    void add_item(int value)
-    {
-        BaseImpl::push_back(value);
-    }
-
-    void remove_item(int value)
-    {
-        auto it = std::find(BaseImpl::begin(), BaseImpl::end(), value);
-        if (it != BaseImpl::end())
-            BaseImpl::erase(it);
-    }
-};
-
 int main()
 {
     dynamic_polymorphism();
@@ -180,16 +150,4 @@ int main()
     std::cout << "\n\n";
 
     static_polymorphism();
-
-    std::cout << "\n\n";
-
-    Container container = {1, 2, 3};
-    container.add_item(10);
-    container.add_item(20);
-    container.remove_item(2);
-
-    for(size_t i = 0u; i < container.size(); ++i)
-    {
-        std::cout << container[i] << ' ';
-    }
 }

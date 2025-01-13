@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -69,29 +70,99 @@ namespace Inheritance
 
 namespace Delegation
 {
-    class TextAlignment
+    namespace Classic
     {
-    public:
-        virtual std::string aligned_text(const std::string& text, size_t line_width) const = 0;
-        virtual ~TextAlignment() = default;
-    };
-
-    class LeftAlignment : public TextAlignment
-    {
-    public:
-        std::string aligned_text(const std::string& text, size_t line_width) const override
+        class TextAlignment
         {
-            std::stringstream out_str;
-            out_str << text << std::setw(line_width - text.length()) << std::right << "";
-            return out_str.str();
-        }
-    };
+        public:
+            virtual std::string aligned_text(const std::string& text, size_t line_width) const = 0;
+            virtual ~TextAlignment() = default;
+        };
 
-    class CenterAlignment : public TextAlignment
-    {
-    public:
-        std::string aligned_text(const std::string& text, size_t line_width) const override
+        class LeftAlignment : public TextAlignment
         {
+        public:
+            std::string aligned_text(const std::string& text, size_t line_width) const override
+            {
+                std::stringstream out_str;
+                out_str << text << std::setw(line_width - text.length()) << std::right << "";
+                return out_str.str();
+            }
+        };
+
+        class CenterAlignment : public TextAlignment
+        {
+        public:
+            std::string aligned_text(const std::string& text, size_t line_width) const override
+            {
+                std::stringstream out_str;
+                auto pad_left = (line_width - text.length()) / 2;
+                auto pad_right = line_width - text.length() - pad_left;
+                out_str << std::setw(pad_left) << "" << text << std::setw(pad_right) << "";
+                return out_str.str();
+            }
+        };
+
+        class RightAlignment : public TextAlignment
+        {
+        public:
+            std::string aligned_text(const std::string& text, size_t line_width) const override
+            {
+                std::stringstream out_str;
+                out_str << std::setw(line_width) << std::right << text;
+                return out_str.str();
+            };
+        };
+
+        class TextParagraph
+        {
+            std::string text_;
+            Color color_;
+            std::unique_ptr<TextAlignment> alignment_;
+
+        public:
+            TextParagraph(std::string text, Color color, std::unique_ptr<TextAlignment> alignment = std::make_unique<LeftAlignment>())
+                : text_(std::move(text))
+                , color_(std::move(color))
+                , alignment_{std::move(alignment)}
+            {
+            }
+
+            void set_alignment(std::unique_ptr<TextAlignment> alignment)
+            {
+                alignment_ = std::move(alignment);
+            }
+
+            void render(size_t line_width) const
+            {
+                std::cout << "[" << alignment_->aligned_text(text_, line_width) << "]\n";
+            }
+        };
+    }
+
+    // class TextAlignment
+    // {
+    // public:
+    //     virtual std::string aligned_text(const std::string& text, size_t line_width) const = 0;
+    //     virtual ~TextAlignment() = default;
+    // };
+
+    using TextAlignment = std::function<std::string(const std::string&, size_t)>;
+
+    std::string left_aligned_text(const std::string& text, size_t line_width)
+    {
+        std::stringstream out_str;
+        out_str << text << std::setw(line_width - text.length()) << std::right << "";
+        return out_str.str();
+    }
+
+    struct CenterAlignedText
+    {
+        int counter = 0;
+
+        std::string operator()(const std::string& text, size_t line_width)
+        {
+            ++counter;
             std::stringstream out_str;
             auto pad_left = (line_width - text.length()) / 2;
             auto pad_right = line_width - text.length() - pad_left;
@@ -100,43 +171,104 @@ namespace Delegation
         }
     };
 
-    class RightAlignment : public TextAlignment
+    auto right_aligned_text = [](const std::string& text, size_t line_width)
     {
-    public:
-        std::string aligned_text(const std::string& text, size_t line_width) const override
-        {
-            std::stringstream out_str;
-            out_str << std::setw(line_width) << std::right << text;
-            return out_str.str();
-        };
+        std::stringstream out_str;
+        out_str << std::setw(line_width) << std::right << text;
+        return out_str.str();
     };
+
+    std::string tabbed_text(const std::string& text, size_t line_width)
+    {
+        std::stringstream out_str;
+        out_str << "\t" << text << std::setw(line_width - text.length()) << std::right << "";
+        return out_str.str();
+    }
 
     class TextParagraph
     {
         std::string text_;
         Color color_;
-        std::unique_ptr<TextAlignment> alignment_;
+        TextAlignment alignment_;
 
     public:
-        TextParagraph(std::string text, Color color, std::unique_ptr<TextAlignment> alignment = std::make_unique<LeftAlignment>())
+        TextParagraph(std::string text, Color color, TextAlignment alignment = &left_aligned_text)
             : text_(std::move(text))
             , color_(std::move(color))
             , alignment_{std::move(alignment)}
         {
         }
 
-        void set_alignment(std::unique_ptr<TextAlignment> alignment)
+        void set_alignment(TextAlignment alignment)
         {
             alignment_ = std::move(alignment);
         }
 
         void render(size_t line_width) const
         {
-            std::cout << "[" << alignment_->aligned_text(text_, line_width) << "]\n";
+            std::cout << "[" << alignment_(text_, line_width) << "]\n";
         }
     };
 } // namespace Delegation
 
+namespace AlternativeWithEnum
+{
+    enum class Alignment
+    {
+        Left,
+        Center,
+        Right,
+        Tabbed
+    };
+
+    class TextParagraph
+    {
+        std::string text_;
+        Color color_;
+        Alignment alignment_;
+
+    public:
+        TextParagraph(std::string text, Color color, Alignment alignment = Alignment::Left)
+            : text_(std::move(text))
+            , color_(std::move(color))
+            , alignment_{std::move(alignment)}
+        {
+        }
+
+        void set_alignment(Alignment alignment)
+        {
+            alignment_ = std::move(alignment);
+        }
+
+        void render(size_t line_width) const
+        {
+            switch (alignment_)
+            {
+            case Alignment::Left:
+                std::cout << "[" << text_ << std::setw(line_width - text_.length()) << std::right << "" << "]\n";
+                break;
+            case Alignment::Center:
+                {
+                    auto pad_left = (line_width - text_.length()) / 2;
+                    auto pad_right = line_width - text_.length() - pad_left;
+                    std::cout << "[" << std::setw(pad_left) << "" << text_ << std::setw(pad_right) << "" << "]\n";
+                }
+                break;
+            case Alignment::Right:
+                std::cout << "[" << std::setw(line_width) << std::right << text_ << "]\n";
+                break;
+            case Alignment::Tabbed:
+                std::cout << "[" << "\t" << text_ << std::setw(line_width - text_.length()) << std::right << "" << "]\n";
+                break;
+            }
+        }
+    };
+}
+
+// test comment
+///////////
+
+//
 void use_inheritance()
 {
     using namespace Inheritance;
@@ -153,14 +285,14 @@ void use_inheritance()
 void use_delegation()
 {
     using namespace Delegation;
-    
+
     TextParagraph text{"This is sample of text...", Color{0, 0, 0}};
     text.render(80);
 
-    text.set_alignment(std::make_unique<RightAlignment>());
+    text.set_alignment(Delegation::right_aligned_text);
     text.render(80);
 
-    text.set_alignment(std::make_unique<CenterAlignment>());
+    text.set_alignment(Delegation::CenterAlignedText{});
     text.render(80);
 }
 
