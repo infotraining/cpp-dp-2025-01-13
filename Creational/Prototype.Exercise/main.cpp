@@ -6,6 +6,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 #include "shape.hpp"
 #include "shape_factories.hpp"
@@ -18,20 +19,21 @@ using namespace Drawing::IO;
 class GraphicsDoc
 {
     vector<unique_ptr<Shape>> shapes_;
-    ShapeFactory& shape_factory_;
-    ShapeRWFactory& shape_rw_factory_;
+    ShapeFactory &shape_factory_;
+    ShapeRWFactory &shape_rw_factory_;
 
 public:
-    GraphicsDoc(ShapeFactory& shape_factory, ShapeRWFactory& shape_rw_factory)
-        : shape_factory_{shape_factory}
-        , shape_rw_factory_{shape_rw_factory}
+    GraphicsDoc(ShapeFactory &shape_factory, ShapeRWFactory &shape_rw_factory)
+        : shape_factory_{shape_factory}, shape_rw_factory_{shape_rw_factory}
     {
     }
 
-    GraphicsDoc(const GraphicsDoc& source) : shape_factory_{source.shape_factory_}, shape_rw_factory_{source.shape_rw_factory_}
+    GraphicsDoc(const GraphicsDoc &that)
+        : shape_factory_(that.shape_factory_), shape_rw_factory_(that.shape_rw_factory_)
     {
-        for (const auto& shp : source.shapes_)
-            shapes_.push_back(shp->clone());
+        for (const auto& shape : that.shapes_) {
+            shapes_.push_back(shape->clone());
+        }
     }
 
     void add(unique_ptr<Shape> shp)
@@ -41,11 +43,11 @@ public:
 
     void render()
     {
-        for (const auto& shp : shapes_)
+        for (const auto &shp : shapes_)
             shp->draw();
     }
 
-    void load(const string& filename)
+    void load(const string &filename)
     {
         ifstream file_in{filename};
 
@@ -74,11 +76,11 @@ public:
         }
     }
 
-    void save(const string& filename)
+    void save(const string &filename)
     {
         ofstream file_out{filename};
 
-        for (const auto& shp : shapes_)
+        for (const auto &shp : shapes_)
         {
             auto shape_rw = shape_rw_factory_.create(make_type_index(*shp));
             shape_rw->write(*shp, file_out);

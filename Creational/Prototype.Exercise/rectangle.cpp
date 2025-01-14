@@ -11,7 +11,7 @@ namespace
 }
 
 Rectangle::Rectangle(int x, int y, int w, int h)
-    : ShapeBase{x, y}
+    : ShapeBase<Rectangle>{x, y}
     , width_{w}
     , height_{h}
 {
@@ -21,9 +21,4 @@ void Rectangle::draw() const
 {
     std::cout << "Drawing rectangle at " << coord() << " with width: " << width_
               << " and height: " << height_ << std::endl;
-}
-
-std::unique_ptr<Shape> Rectangle::clone() const
-{
-    return std::make_unique<Rectangle>(*this);
 }

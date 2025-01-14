@@ -51,8 +51,3 @@ void Square::draw() const
 {
     rect_.draw();
 }
-
-std::unique_ptr<Shape> Square::clone() const
-{
-    return std::make_unique<Square>(*this);
-}

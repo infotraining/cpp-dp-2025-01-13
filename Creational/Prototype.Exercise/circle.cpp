@@ -20,8 +20,3 @@ void Circle::draw() const
 {
     std::cout << "Drawing a circle at " << coord() << " with radius: " << radius_ << std::endl;
 }
-
-std::unique_ptr<Shape> Circle::clone() const
-{
-    return std::make_unique<Circle>(*this);
-}
