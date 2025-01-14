@@ -13,6 +13,7 @@ namespace Drawing
         virtual ~Shape() = default;
         virtual void move(int x, int y) = 0;
         virtual void draw() const = 0;
+        virtual std::unique_ptr<Shape> clone() const = 0;
     };
 
     class ShapeBase : public Shape

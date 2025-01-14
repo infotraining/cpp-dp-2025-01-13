@@ -28,10 +28,10 @@ public:
     {
     }
 
-    // TODO
-    GraphicsDoc(const GraphicsDoc& source)
+    GraphicsDoc(const GraphicsDoc& source) : shape_factory_{source.shape_factory_}, shape_rw_factory_{source.shape_rw_factory_}
     {
-
+        for (const auto& shp : source.shapes_)
+            shapes_.push_back(shp->clone());
     }
 
     void add(unique_ptr<Shape> shp)

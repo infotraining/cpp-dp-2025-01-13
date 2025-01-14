@@ -22,3 +22,8 @@ void Rectangle::draw() const
     std::cout << "Drawing rectangle at " << coord() << " with width: " << width_
               << " and height: " << height_ << std::endl;
 }
+
+std::unique_ptr<Shape> Rectangle::clone() const
+{
+    return std::make_unique<Rectangle>(*this);
+}

@@ -1,5 +1,7 @@
 #include "square.hpp"
+
 #include "shape_factories.hpp"
+
 #include <cassert>
 
 using namespace std;
@@ -8,7 +10,8 @@ using namespace Drawing;
 namespace
 {
     bool is_registered = SingletonShapeFactory::instance()
-                             .register_creator(Square::id, [] { return make_unique<Square>(); });
+                             .register_creator(Square::id, []
+                                 { return make_unique<Square>(); });
 }
 
 Square::Square(int x, int y, int size)
@@ -47,4 +50,9 @@ void Square::set_size(int size)
 void Square::draw() const
 {
     rect_.draw();
+}
+
+std::unique_ptr<Shape> Square::clone() const
+{
+    return std::make_unique<Square>(*this);
 }

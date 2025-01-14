@@ -25,6 +25,8 @@ namespace Drawing
         }
 
         void draw() const override;
+
+        std::unique_ptr<Shape> clone() const override;
     };
 }
 
