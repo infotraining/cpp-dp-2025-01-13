@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define MOTIF
+#define MOTIF 1
 
 enum class IconType
 {
@@ -16,6 +16,15 @@ enum class IconType
     warning,
     error
 };
+
+enum class Arch
+{
+    Motif = 0,
+    Windows = 1
+};
+
+#define ARCH Arch::Motif
+
 
 class Widget
 {
@@ -30,9 +39,8 @@ class Button : public Widget
     IconType icon_type_;
 
 public:
-    Button(const std::string& caption, IconType icon_type)
-        : caption_{caption}
-        , icon_type_{icon_type}
+    Button(const std::string &caption, IconType icon_type)
+        : caption_{caption}, icon_type_{icon_type}
     {
     }
 
@@ -52,7 +60,7 @@ class Menu : public Widget
     std::string text_;
 
 public:
-    Menu(const std::string& text)
+    Menu(const std::string &text)
         : text_{text}
     {
     }
@@ -115,7 +123,7 @@ public:
     void display() const
     {
         std::cout << "######################\n";
-        for (const auto& w : widgets)
+        for (const auto &w : widgets)
             w->draw();
         std::cout << "######################\n\n";
     }
@@ -126,45 +134,84 @@ public:
     }
 };
 
+class IWidgetFactory
+{
+public:
+    virtual std::unique_ptr<Button> CreateButton(const std::string &caption, IconType icon_type) = 0;
+    virtual std::unique_ptr<Menu> CreateMenu(const std::string &text) = 0;
+    virtual ~IWidgetFactory() = default;	
+};
+
+class MotifWidgetFactory : public IWidgetFactory
+{
+public:
+    std::unique_ptr<Button> CreateButton(const std::string &caption, IconType icon_type)
+    {
+        return std::make_unique<MotifButton>(caption, icon_type);
+    }
+
+    std::unique_ptr<Menu> CreateMenu(const std::string &text)
+    {
+        return std::make_unique<MotifMenu>(text);
+    }
+};
+
+class WindowsWidgetFactory : public IWidgetFactory
+{
+public:
+    std::unique_ptr<Button> CreateButton(const std::string &caption, IconType icon_type)
+    {
+        return std::make_unique<WindowsButton>(caption, icon_type);
+    }
+
+    std::unique_ptr<Menu> CreateMenu(const std::string &text)
+    {
+        return std::make_unique<WindowsMenu>(text);
+    }
+};
+
 class WindowOne : public Window
 {
 
 public:
-    WindowOne()
+    WindowOne(IWidgetFactory& widgetFactory)
     {
-#ifdef MOTIF
-        add_widget(std::make_unique<MotifButton>("OK", IconType::ok));
-        add_widget(std::make_unique<MotifMenu>("File"));
-#else // WINDOWS
-        add_widget(std::make_unique<WindowsButton>("OK", IconType::ok));
-        add_widget(std::make_unique<WindowsMenu>("File"));
-#endif
+        add_widget(widgetFactory.CreateButton("OK", IconType::ok));
+        add_widget(widgetFactory.CreateMenu("File"));
     }
 };
 
 class WindowTwo : public Window
 {
-
 public:
-    WindowTwo()
+    WindowTwo(IWidgetFactory& widgetFactory)
     {
-#ifdef MOTIF
-        add_widget(std::make_unique<MotifMenu>("Edit"));
-        add_widget(std::make_unique<MotifButton>("OK", IconType::ok));
-        add_widget(std::make_unique<MotifButton>("Cancel", IconType::cancel));
-#else // WINDOWS
-        add_widget(std::make_unique<WindowsMenu>("Edit"));
-        add_widget(std::make_unique<WindowsButton>("OK", IconType::ok));
-        add_widget(std::make_unique<WindowsButton>("Cancel", IconType::cancel));
-#endif
+        add_widget(widgetFactory.CreateMenu("Edit"));
+        add_widget(widgetFactory.CreateButton("OK", IconType::ok));
+        add_widget(widgetFactory.CreateButton("Cancel", IconType::cancel));
     }
 };
 
+static std::unique_ptr<IWidgetFactory> CreateWidgetFactory(Arch type)
+{
+    switch (type)
+    {
+    case Arch::Motif:
+        return std::make_unique<MotifWidgetFactory>();
+        
+    case Arch::Windows:
+    default:
+        return std::make_unique<WindowsWidgetFactory>();
+    }
+}
+
 int main(void)
 {
-    WindowOne w1;
+    std::unique_ptr<IWidgetFactory> widgetFactory = CreateWidgetFactory(ARCH);
+    
+    WindowOne w1{*widgetFactory};
     w1.display();
 
-    WindowTwo w2;
+    WindowTwo w2{*widgetFactory};
     w2.display();
 }

@@ -25,6 +25,8 @@ namespace Game
     {
     };
 
+    // Family of implementations for LEVEL 1
+
     class SillySoldier : public Soldier
     {
     public:
@@ -51,6 +53,8 @@ namespace Game
             std::cout << "SillySuperMonster Action" << std::endl;
         }
     };
+
+    // Family of implementations for LEVEL 2
 
     class BadSoldier : public Soldier
     {

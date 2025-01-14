@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <typeindex>
+#include <list>
 
 #include "shape.hpp"
 #include "shape_readers_writers/rectangle_reader_writer.hpp"
@@ -100,6 +101,21 @@ public:
         }
     }
 };
+
+auto get_container()
+{
+    return list<int>{1, 2, 3, 4, 5, 6};
+}
+
+void most_popular_factory_method_in_cpp()
+{
+    auto container = get_container();
+
+    for(auto it = container.begin(); it != container.end(); ++it)
+    {
+        cout << *it << " ";
+    }
+}
 
 int main()
 {
