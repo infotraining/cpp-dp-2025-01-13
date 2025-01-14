@@ -9,6 +9,10 @@ void client(std::unique_ptr<Coffee> coffee)
 
 int main()
 {
-    std::unique_ptr<Coffee> cf = std::make_unique<Espresso>();
-    client(std::move(cf));
+    std::unique_ptr<Coffee> cf = std::make_unique<Cappuccino>();
+    std::unique_ptr<Coffee> cf1 = std::make_unique<Whisky>(std::move(cf));
+    std::unique_ptr<Coffee> cf2 = std::make_unique<Whisky>(std::move(cf1));
+    std::unique_ptr<Coffee> cf3 = std::make_unique<Whisky>(std::move(cf2));
+    std::unique_ptr<Coffee> cf4 = std::make_unique<Whipped>(std::move(cf3));
+    client(std::move(cf4));
 }
