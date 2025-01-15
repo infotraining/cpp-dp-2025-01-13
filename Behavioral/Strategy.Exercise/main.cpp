@@ -7,15 +7,15 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <memory>
 
 struct StatResult
 {
     std::string description;
     double value;
 
-    StatResult(const std::string& desc, double val)
-        : description(desc)
-        , value(val)
+    StatResult(const std::string &desc, double val)
+        : description(desc), value(val)
     {
     }
 };
@@ -23,26 +23,60 @@ struct StatResult
 using Data = std::vector<double>;
 using Results = std::vector<StatResult>;
 
-enum StatisticsType
+class StatisticsStrategy
 {
-    avg,
-    min_max,
-    sum
+public:
+    virtual ~StatisticsStrategy() = default;
+    virtual void calculate(const Data &data, Results &results) const = 0;
+};
+
+class AverageStrategy : public StatisticsStrategy
+{
+public:
+    void calculate(const Data &data, Results &results) const override
+    {
+        double sum = std::accumulate(data.begin(), data.end(), 0.0);
+        double avg = sum / data.size();
+        results.push_back(StatResult("Avg", avg));
+    }
+};
+
+class MinMaxStrategy : public StatisticsStrategy
+{
+public:
+    void calculate(const Data &data, Results &results) const override
+    {
+        double min = *(std::min_element(data.begin(), data.end()));
+        double max = *(std::max_element(data.begin(), data.end()));
+        results.push_back(StatResult("Min", min));
+        results.push_back(StatResult("Max", max));
+    }
+};
+
+class SumStrategy : public StatisticsStrategy
+{
+public:
+    void calculate(const Data &data, Results &results) const override
+    {
+        double sum = std::accumulate(data.begin(), data.end(), 0.0);
+        results.push_back(StatResult("Sum", sum));
+    }
 };
 
 class DataAnalyzer
 {
-    StatisticsType stat_type_;
+    std::shared_ptr<StatisticsStrategy> statistics_;
+
     Data data_;
     Results results_;
 
 public:
-    DataAnalyzer(StatisticsType stat_type)
-        : stat_type_{stat_type}
+    DataAnalyzer(std::shared_ptr<StatisticsStrategy> stat_type_)
+        : statistics_{stat_type_}
     {
     }
 
-    void load_data(const std::string& file_name)
+    void load_data(const std::string &file_name)
     {
         data_.clear();
         results_.clear();
@@ -60,52 +94,48 @@ public:
         std::cout << "File " << file_name << " has been loaded...\n";
     }
 
-    void set_statistics(StatisticsType stat_type)
+    void set_statistics(std::shared_ptr<StatisticsStrategy> stat_type)
     {
-        stat_type_ = stat_type;
+        statistics_ = stat_type;
+    }
+
+    void set_strategy(std::shared_ptr<StatisticsStrategy> strategy)
+    {
+        statistics_ = std::move(strategy);
     }
 
     void calculate()
     {
-        if (stat_type_ == avg)
+        if (statistics_)
         {
-            double sum = std::accumulate(data_.begin(), data_.end(), 0.0);
-            double avg = sum / data_.size();
-
-            StatResult result("Avg", avg);
-            results_.push_back(result);
+            statistics_->calculate(data_, results_);
         }
-        else if (stat_type_ == min_max)
+        else
         {
-            double min = *(std::min_element(data_.begin(), data_.end()));
-            double max = *(std::max_element(data_.begin(), data_.end()));
-
-            results_.push_back(StatResult("Min", min));
-            results_.push_back(StatResult("Max", max));
-        }
-        else if (stat_type_ == sum)
-        {
-            double sum = std::accumulate(data_.begin(), data_.end(), 0.0);
-
-            results_.push_back(StatResult("Sum", sum));
+            throw std::runtime_error("Strategy not set");
         }
     }
 
-    const Results& results() const
+    const Results &results() const
     {
         return results_;
     }
 };
 
-void show_results(const Results& results)
+void show_results(const Results &results)
 {
-    for (const auto& rslt : results)
+    for (const auto &rslt : results)
         std::cout << rslt.description << " = " << rslt.value << std::endl;
 }
+
+const auto avg = std::make_shared<AverageStrategy>();
+const auto min_max = std::make_shared<MinMaxStrategy>();
+const auto sum = std::make_shared<SumStrategy>();
 
 int main()
 {
     DataAnalyzer da{avg};
+    std::cout << "Strategy: Average\n";
     da.load_data("stats_data.dat");
 
     da.calculate();
